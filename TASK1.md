@@ -24,7 +24,7 @@
 
 1. Install WSL (Windows Subsystem for Linux) Ubuntu first if you don't have it.
    
-   ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-23-40-image.png)
+<img width="975" height="373" alt="image" src="https://github.com/user-attachments/assets/759216b9-7ef3-4b44-becc-4543fe7e7a0a" />
 
 2. Install Terraform and Ansible inside WSL.
    
@@ -36,17 +36,19 @@
      sudo apt update && sudo apt install terraform
      ```
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-28-53-image.png)
+     <img width="975" height="236" alt="image" src="https://github.com/user-attachments/assets/788be720-1bba-4048-aa9b-0fe33d932ba2" />
+
      
      Then run `terraform --version` to verify it's version.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-29-21-image.png)
+     <img width="975" height="123" alt="image" src="https://github.com/user-attachments/assets/4e594172-fadd-46cc-a333-21d32deeb188" />
+
    
    - For Ansible, just run `sudo apt install ansible -y` to install it. Then run `ansible --version` to verify it's version.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-30-30-image.png)
-     
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-30-33-image.png)
+     <img width="975" height="123" alt="image" src="https://github.com/user-attachments/assets/4e0be5e8-8e83-4392-9bae-1f0cee19d95d" /><br>     
+     <img width="975" height="188" alt="image" src="https://github.com/user-attachments/assets/0dd56ff1-b453-43b3-b9cb-25be4ccfafa8" />
+
 
 # II. AWS Preparation & SSH
 
@@ -54,31 +56,31 @@
    
    - First, click on IAM > IAM users > Create user. On the first page (*Specify user details*) you can fill the *user name* as needed. For this one, I filled it with `terraform-user`. After that, click *Next*.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-37-34-image.png)
-   
+     <img width="975" height="289" alt="image" src="https://github.com/user-attachments/assets/27f1f019-6c85-432a-a6b6-4be7561d4ea3" />
+
    - In the *Set permissions* page, choose "*Attach policies directly*" and search for ***"AmazonEC2FullAccess"*** (this is chosen so that Terraform can manage EC2 instances on AWS). After that, click *Next* button and on the next page just click *Create account*.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-40-24-image.png)
+     <img width="975" height="458" alt="image" src="https://github.com/user-attachments/assets/8c6fb2bf-a87c-4bd1-b40b-6be3e1c3060c" />
    
    - In the *IAM users* page, click on the new account that was just been made.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-42-18-image.png)
+     <img width="975" height="321" alt="image" src="https://github.com/user-attachments/assets/f7718a57-2aa5-44a4-8be3-47850e4263af" />
    
    - Once inside, click “Create access key” (highlighted below).
-     
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-42-39-image.png)
-   
+
+     <img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/0e953cce-305d-4462-9e6e-d22095d8baef" />
+
    - On the “*Access key best practice & alternatives*” page, select the use case for ***Command Line Interface (CLI)*** and check the confirmation box below it, then click the *Next* button.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-44-58-image.png)
+     <img width="975" height="709" alt="image" src="https://github.com/user-attachments/assets/9341d53b-fab9-44f8-ab1c-2099f3eb4666" />
    
    - On the next page, you could enter a description of the access key that you'll create, then click “*Create access key*”. In this case, I fill it with "*terraform-access*".
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-46-27-image.png)
+     <img width="975" height="238" alt="image" src="https://github.com/user-attachments/assets/409f73fb-d32b-4633-af52-eb8159461b39" />
    
    - Next, a page will appear informing us that the access key has been created. ***SAVE THE ACCESS KEY BY CLICKING "download .csv file"! BECAUSE THIS ACCESS KEY WILL ONLY BE DISPLAYED ONCE!*** Once done, click the "*Done*" button.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-48-28-image.png)
+     <img width="975" height="470" alt="image" src="https://github.com/user-attachments/assets/ed4f78a8-a9ca-420d-b807-2e533e36e64e" />
 
 2. We then setup AWS CLI V2. 
    
@@ -93,7 +95,7 @@
      aws --version
      ```
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-55-01-image.png)
+     <img width="975" height="61" alt="image" src="https://github.com/user-attachments/assets/e4b18e3c-ddb7-4b5f-aa10-8336466d74e4" />
    
    - After that, run `aws configure` to connect this device to AWS. Fill the information from the access key that just created.
      
@@ -106,7 +108,7 @@
    
    - Then, run `aws sts get-caller-identity` to verify.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-19-57-27-image.png) 
+     <img width="975" height="227" alt="image" src="https://github.com/user-attachments/assets/ec3b16da-e908-4412-a48d-e618a81698f6" />
 
 3. Instead of creating the key pair manually in AWS Console, we generate it locally. This is cleaner because Terraform will manage the key pair lifecycle automatically.
    
@@ -122,11 +124,11 @@
      
      - `finaltask-key.pub` → public key (Terraform uploads this to AWS)
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-20-02-51-image.png)
+     <img width="975" height="466" alt="image" src="https://github.com/user-attachments/assets/903d09a5-08b1-4e67-aa37-c45cf3620183" />
    
    - Set correct permissions on the private key with `chmod 400 ~/automation/ssh/finaltask-key/` . Why? So that the file can only be accessible by its owner.
      
-     ![](C:\Users\Rizal\AppData\Roaming\marktext\images\2026-04-27-20-03-57-image.png)
+     <img width="975" height="34" alt="image" src="https://github.com/user-attachments/assets/19eb4782-100f-4009-8752-cfe2ba70dfe7" />
 
 # III. Terraform's Configs & Run
 
@@ -698,4 +700,260 @@ terraform.tfvars
 - When done, the servers can be verified in AWS.
   <img width="975" height="111" alt="image" src="https://github.com/user-attachments/assets/5ee76dd8-a732-499f-bc1d-a0825fffa002" />
 
+# IV. Ansible Configs and Run
+
+- Set up the SSH from the servers that has been made. Create the `/.ssh/` directory then create the config file.
   
+  <img width="975" height="575" alt="image" src="https://github.com/user-attachments/assets/d449e063-fbd1-4824-b3b8-23ab4c66feec" />
+
+- Then, create a new directory for our ansible `mkdir -p ~/automation/ansible`. Inside that directory, now we can start creating our ansible files.
+  
+  - Create the inventory file (`nano ~/automation/ansible/inventory`), this tells Ansible which servers to connect to.
+      
+      ```bash
+      [gateway]
+      gateway-server ansible_host=16.78.186.207
+      
+      [appservers]
+      appserver1 ansible_host=108.136.90.214
+      appserver2 ansible_host=108.137.167.87
+      appserver3 ansible_host=15.232.57.168
+      
+      [all:vars]
+      ansible_user=ubuntu
+      ansible_ssh_private_key_file=~/automation/ssh/finaltask-key
+      ansible_port=22
+      ```
+    
+  - Then verify it with `ansible all -i inventory -m ping`.
+    
+    <img width="870" height="824" alt="image" src="https://github.com/user-attachments/assets/029f56fe-9ae9-4e41-9795-42df91d96f8d" />
+
+  - After the inventory file, create the configuration file for ansible (`nano ansible.cfg`).
+    
+    ```configs
+    [defaults]
+    inventory       = ~/automation/ansible/inventory
+    private_key_file = ~/automation/ssh/finaltask-key
+    remote_user     = ubuntu
+    host_key_checking = False
+    
+    [privilege_escalation]
+    become       = True
+    become_method = sudo
+    become_user  = root
+
+    ````
+    
+  - Create the directories for group_vars and templates (the directory `/templates/` is going to be used later for monitoring).
+    
+    <img width="975" height="48" alt="image" src="https://github.com/user-attachments/assets/7575842b-4f77-4392-8f18-990db2c8191e" />
+    
+  - Then, create the variable files filled with shared variables that gonna be used by all the ansible files. (`nano ~/automation/ansible/group_vars/all.yml`)
+    ```yml
+    # USER
+    # The new user that will be created on all servers
+    # This is the user you'll use for all future tasks
+    new_user: "finaltask-rzl"
+    
+    # SSH
+    # Custom SSH port - changing from default 22 to 6969 for security
+    ssh_port: 6969
+    
+    # COMMON PORTS
+    # Standard web ports needed on all servers
+    http_port: 80
+    https_port: 443
+    ```
+    
+  - Now, we can create all the playbook files. First, `common.yaml` that going to run on all servers.
+    <details>
+    <summary>common.yaml</summary>
+   
+      ```yaml
+      - name: Common Configuration for All Servers
+        hosts: all
+        become: true
+      
+        tasks:
+      
+          # ==========================================
+          # 1. SYSTEM UPDATE
+          # ==========================================
+          - name: Update and upgrade apt packages
+            apt:
+              update_cache: yes
+              upgrade: yes
+      
+          # ==========================================
+          # 2. CREATE NEW USER
+          # ==========================================
+          - name: Create finaltask user
+            user:
+              name: "{{ new_user }}"
+              shell: /bin/bash
+              create_home: yes
+      
+          - name: Add finaltask user to sudo group
+            user:
+              name: "{{ new_user }}"
+              groups: sudo
+              append: yes
+      
+          - name: Set up SSH key for finaltask user
+            authorized_key:
+              user: "{{ new_user }}"
+              key: "{{ lookup('file', '~/automation/ssh/finaltask-key.pub') }}"
+              state: present
+      
+          # ==========================================
+          # 3. SSH HARDENING
+          # ==========================================
+          - name: Change SSH port to 6969
+            lineinfile:
+              path: /etc/ssh/sshd_config
+              regexp: '^#?Port'
+              line: 'Port {{ ssh_port }}'
+              state: present
+      
+          - name: Enable password authentication
+            lineinfile:
+              path: /etc/ssh/sshd_config
+              regexp: '^#?PasswordAuthentication'
+              line: 'PasswordAuthentication yes'
+              state: present
+      
+          - name: Restart SSH service
+            service:
+              name: ssh
+              state: restarted
+      
+          # ==========================================
+          # 4. UFW FIREWALL
+          # ==========================================
+          - name: Install UFW
+            apt:
+              name: ufw
+              state: present
+      
+          - name: Allow SSH port
+            ufw:
+              rule: allow
+              port: '{{ ssh_port }}'
+              proto: tcp
+      
+          - name: Allow HTTP
+            ufw:
+              rule: allow
+              port: '{{ http_port }}'
+              proto: tcp
+      
+          - name: Allow HTTPS
+            ufw:
+              rule: allow
+              port: '{{ https_port }}'
+              proto: tcp
+      
+          - name: Enable UFW
+            ufw:
+              state: enabled
+              policy: deny
+
+      ```
+      
+    </details>
+    
+  - Then `appserver.yaml` that gonna run on all the app-servers.
+    <details>
+    <summary>appserver.yaml</summary>
+    
+    ```yaml
+    - name: Appserver Specific Configuration
+      hosts: appservers
+      become: true
+    
+      tasks:
+    
+        - name: Allow Frontend port
+          ufw:
+            rule: allow
+            port: '3000'
+            proto: tcp
+    
+        - name: Allow Backend API port
+          ufw:
+            rule: allow
+            port: '8000'
+            proto: tcp
+    
+        - name: Allow PostgreSQL port
+          ufw:
+            rule: allow
+            port: '5432'
+            proto: tcp
+    
+        - name: Allow Prometheus Node Exporter port
+          ufw:
+            rule: allow
+            port: '9100'
+            proto: tcp
+    
+        - name: Reload UFW
+          ufw:
+            state: enabled
+            policy: deny
+    
+    ```
+      
+    </details>
+    
+  - Lastly, `gateway.yaml` that gonna run on gateway server.
+    <details>
+    <summary>gateway.yaml</summary>
+      
+      ```yaml
+    - name: Gateway Specific Configuration
+      hosts: gateway
+      become: true
+    
+      tasks:
+    
+        - name: Install NGINX
+          apt:
+            name: nginx
+            state: present
+            update_cache: yes
+    
+        - name: Start and enable NGINX
+          service:
+            name: nginx
+            state: started
+            enabled: yes
+    
+      ```
+      
+    </details>
+    
+  - For the one that gonna run all the playbooks, create a master-playbook named `site.yml`.
+    <details>
+    <summary>site.yml</summary>
+    
+      ```yaml
+      - import_playbook: common.yml
+      - import_playbook: appserver.yml
+      - import_playbook: gateway.yml
+    
+      ```
+    
+    </details>
+    
+    
+  - s
+    
+  - s
+    
+  - ss
+    
+- s
+  
+- s
