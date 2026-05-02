@@ -1,0 +1,97 @@
+---
+# Task 3 - Server Hardening (common to all servers)
+- name: Server Hardening (Task 3)
+  hosts: all
+  become: yes
+  tasks:
+    # 1. Create new user finaltask-$USER with sudo access
+    - name: Create finaltask user with sudo access
+      user:
+        name: "{{ new_user }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        password: "{{ vault_user_password | password_hash('sha512') }}"
+
+    # 2. Set up SSH key for the new user
+    - name: Set up authorized keys for the new user
+      authorized_key:
+        user: "{{ new_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa_final_task.pub') }}"
+
+    # 3. SSH Hardening - remove drop-in configs that override sshd_config
+    - name: Remove conflicting SSH drop-in configs
+      file:
+        path: /etc/ssh/sshd_config.d
+        state: "{{ item }}"
+      loop:
+        - absent
+        - directory
+
+    # 4. Change SSH port to 6969
+    - name: Change SSH port to 6969
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?Port\\s+"
+        line: "Port 6969"
+
+    # 5. Enable SSH key + Password login
+    - name: Enable PubkeyAuthentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PubkeyAuthentication\\s+"
+        line: "PubkeyAuthentication yes"
+
+    - name: Enable PasswordAuthentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication\\s+"
+        line: "PasswordAuthentication yes"
+
+    - name: Enable Keyboard Interactive Authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?KbdInteractiveAuthentication\\s+"
+        line: "KbdInteractiveAuthentication yes"
+
+    - name: Require SSH key AND Password (MFA)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?AuthenticationMethods\\s+"
+        line: "AuthenticationMethods publickey,keyboard-interactive"
+        insertafter: EOF
+
+    # 6. UFW - allow only used ports
+    - name: Allow SSH port 6969
+      ufw:
+        rule: allow
+        port: "6969"
+        proto: tcp
+
+    - name: Allow HTTP
+      ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+
+    - name: Allow HTTPS
+      ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+
+    - name: Enable UFW with default deny
+      ufw:
+        state: enabled
+        policy: deny
+
+    # 7. Validate and restart SSH
+    - name: Validate sshd config
+      command: sshd -t
+      changed_when: false
+
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
