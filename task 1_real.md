@@ -74,16 +74,16 @@
 ## Building with Terraform
 Here are the structure of Terraform's directory:
 
-```text
-~/infrastructure/
-└── terraform/
-    ├── providers.tf
-    ├── variables.tf
-    ├── main.tf
-    ├── dns.tf
-    └── outputs.tf
 
-```
+~/infrastructure/<br>
+└── terraform/<br>
+-    ├── [providers.tf](https://github.com/ryuushiro/private/blob/main/files/task1/profiders.tf)<br>
+-    ├── [variables.tf](https://github.com/ryuushiro/private/blob/main/files/task1/variables.tf)<br>
+-    ├── [main.tf](https://github.com/ryuushiro/private/blob/main/files/task1/main.tf)<br>
+-    ├── dns.tf (for task 8)<br>
+-    └── [outputs.tf](https://github.com/ryuushiro/private/blob/main/files/task1/outputs.tf) <br>
+
+---
 
 *   **`providers.tf`**: This file tells Terraform which external services it needs to talk to. In your case, it configures the connection to **AWS** (to create the servers) and **Cloudflare** (to manage your DNS records). It specifies the required versions for these plugins.
 *   **`variables.tf`**: This file acts as a dictionary for all the customizable inputs your infrastructure needs. It defines variables like your Cloudflare API token, zone ID, the AWS region you want to deploy in, and potentially the size of the servers you want to use. Using variables makes your code reusable.
