@@ -57,9 +57,70 @@ Here are the structure of Ansible's directory:
 
 - Now, because the common.yml that I've used before not enabling MFA (Multi-Factor Authentication), we can log in either with password or pub key. So that we could log in with the key and the password, I need to update the common.yaml
 
+```yaml
 
--	s
--	s
+    - name: Enable Keyboard Interactive Authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?KbdInteractiveAuthentication\\s+"
+        line: "KbdInteractiveAuthentication yes"
+
+    - name: Require SSH key AND Password (MFA)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?AuthenticationMethods\\s+"
+        line: "AuthenticationMethods publickey,keyboard-interactive"
+        insertafter: EOF
+```
+
+- After that, we need to add the port in our all.yml so that our ansible can access the new 6969 port.
+
+```yaml
+# Connection Settings
+# These tell Ansible HOW to connect to the servers after hardening
+ansible_port: 6969
+ansible_user: "{{ new_user }}"
+
+```
+
+- Then create the config file in ~/.ssh/
+
+```ini
+# Gateway
+Host gateway
+    HostName 16.79.152.201
+    User finaltask-rizal
+    Port 6969
+    IdentityFile ~/.ssh/id_rsa_final_task
+
+# App Servers
+Host app1
+    HostName 108.137.128.226
+    User finaltask-rizal
+    Port 6969
+    IdentityFile ~/.ssh/id_rsa_final_task
+
+Host app2
+    HostName 108.137.104.154
+    User finaltask-rizal
+    Port 6969
+    IdentityFile ~/.ssh/id_rsa_final_task
+
+Host app3
+    HostName 15.232.78.179
+    User finaltask-rizal
+    Port 6969
+    IdentityFile ~/.ssh/id_rsa_final_task
+```
+
+-	After all of that edit so I can connect to the new port, run `ansible-playbook site.yml` again.
+  <img width="897" height="126" alt="image" src="https://github.com/user-attachments/assets/7872cc10-9786-4041-9ff5-16752e48934f" />
+
+
+-	To check if we can log in with the configuration that we've set, run ssh to one of the server.
+  <img width="577" height="503" alt="image" src="https://github.com/user-attachments/assets/09a01a33-d3d3-4c9e-8554-bfb3aa086a0f" />
+  As you can see, I need to input password again even though we connected thru our public key.
+
 
 
 
