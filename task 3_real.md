@@ -48,7 +48,7 @@ Here are the structure of Ansible's directory:
   <img width="465" height="141" alt="image" src="https://github.com/user-attachments/assets/a7f00e8f-08c6-4311-bd80-10d165c2b42f" />
     
 - After creating all of that, we can ping the servers. `ansible all -m ping`
-  <img width="517" height="520" alt="image" src="https://github.com/user-attachments/assets/6c63c749-ec59-45c8-ad29-66575bdf0018" />
+  <img width="489" height="493" alt="image" src="https://github.com/user-attachments/assets/646f38d8-061c-4d03-a3ec-62806bccf368" />
 
 - If all outputs are success, then we can finally run the ansible with `ansible-playbook site.yml`. With this, we perform **PLEASE EDIT LATER!** :
   <img width="1888" height="434" alt="image" src="https://github.com/user-attachments/assets/0f5fbf35-b579-4935-8424-2ce03209d042" />
