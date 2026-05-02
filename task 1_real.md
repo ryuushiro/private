@@ -105,5 +105,6 @@ Here are the structure of Terraform's directory:
   <img width="975" height="217" alt="image" src="https://github.com/user-attachments/assets/c8d83cd3-7589-49ae-800b-87cc10aa0037" />
 
 - When done, the outputs.tf gonna show you the IPs
-  <img width="453" height="149" alt="image" src="https://github.com/user-attachments/assets/50c9acfc-a790-4d48-9520-ca88e2af4b53" />
+  <img width="476" height="162" alt="image" src="https://github.com/user-attachments/assets/d745d64b-68ad-4470-a819-a7c5668d6a68" />
+
 
