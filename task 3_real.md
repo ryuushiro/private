@@ -55,7 +55,7 @@ Here are the structure of Ansible's directory:
 
   <img width="714" height="757" alt="image" src="https://github.com/user-attachments/assets/9fe172b0-f742-4cbe-b578-7c78297f7f04" />
 
-
+- Now, because the common.yml that I've used before not enabling MFA (Multi-Factor Authentication), we can log in either with password or pub key. So that we could log in with the key and the password, I need to update the common.yaml
 
 
 -	s
