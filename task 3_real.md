@@ -51,7 +51,12 @@ Here are the structure of Ansible's directory:
   <img width="489" height="493" alt="image" src="https://github.com/user-attachments/assets/646f38d8-061c-4d03-a3ec-62806bccf368" />
 
 - If all outputs are success, then we can finally run the ansible with `ansible-playbook site.yml`. With this, we perform **PLEASE EDIT LATER!** :
-  <img width="1888" height="434" alt="image" src="https://github.com/user-attachments/assets/0f5fbf35-b579-4935-8424-2ce03209d042" />
+  <img width="1254" height="824" alt="image" src="https://github.com/user-attachments/assets/82146b06-7ebb-4296-9f5d-f910ea13dc18" />
+
+  <img width="714" height="757" alt="image" src="https://github.com/user-attachments/assets/9fe172b0-f742-4cbe-b578-7c78297f7f04" />
+
+
+
 
 -	s
 -	s
