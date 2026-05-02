@@ -3,6 +3,11 @@
 new_ssh_port: 6969
 new_user: finaltask-rizal
 
+# Connection Settings
+# These tell Ansible HOW to connect to the servers after hardening
+ansible_port: 6969
+ansible_user: "{{ new_user }}"
+
 # Automated Authentication
 # These allow Ansible to login and run sudo commands automatically
 ansible_password: "{{ vault_ssh_password }}"
