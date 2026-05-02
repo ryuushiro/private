@@ -1,0 +1,9 @@
+---
+# Shared variables for all servers
+new_ssh_port: 6969
+new_user: finaltask-rizal
+
+# Automated Authentication
+# These allow Ansible to login and run sudo commands automatically
+ansible_password: dumbways
+ansible_become_password: dumbways
