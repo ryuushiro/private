@@ -1,0 +1,86 @@
+---
+# This playbook targets all servers to enforce a common security baseline (Task 3)
+- name: Common Configuration for All Servers (Task 3)
+  hosts: all
+  become: yes # Run all tasks with sudo/root privileges
+  tasks:
+    # 1. USER MANAGEMENT
+    # Creates the new playground user and hashes the password "dumbways" for them
+    - name: Create finaltask user with default password ('dumbways')
+      user:
+        name: "{{ new_user }}"
+        shell: /bin/bash
+        groups: sudo # Gives the user admin rights
+        append: yes
+        password: "{{ 'dumbways' | password_hash('sha512', 'secretsalt') }}"
+
+    # 2. SSH KEY INJECTION
+    # Takes your local public key and puts it on the server so you can log in
+    - name: Set up authorized keys for the new user
+      authorized_key:
+        user: "{{ new_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa_final_task.pub') }}"
+
+    # 3. SSH HARDENING (PORT)
+    # Change the default SSH port from 22 to 6969
+    - name: Change SSH port to custom port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port\s+'
+        line: "Port {{ new_ssh_port }}"
+
+    # 4. SSH HARDENING (MULTI-FACTOR AUTH)
+    # Ensure Password Authentication is enabled
+    - name: Enable Password Authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication\s+'
+        line: "PasswordAuthentication yes"
+
+    # Require both SSH key AND password to login (MFA)
+    - name: Require both SSH key and Password
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?AuthenticationMethods\s+'
+        line: "AuthenticationMethods publickey,password"
+        insertafter: EOF
+
+    # Restart SSH service to apply all changes
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
+
+
+    # 5. FIREWALL CONFIGURATION (UFW)
+    # Only allows the specific ports we need, blocking everything else
+    - name: Configure UFW to allow custom SSH port
+      ufw:
+        rule: allow
+        port: "{{ new_ssh_port }}" # Using the variable we defined in group_vars (6969)
+        proto: tcp
+
+    - name: Configure UFW to allow HTTP
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: Configure UFW to allow HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny # Default deny for anything not explicitly allowed above
+
+  # Handlers only run if notified by a task above (e.g. if a config file was actually changed)
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
