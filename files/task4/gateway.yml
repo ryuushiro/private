@@ -1,19 +1,32 @@
 ---
+# =============================================================================
+# gateway.yml — Task 4: Private Docker Registry
+# =============================================================================
+# Target host : gateway (16.79.152.201) defined in inventory.ini
+# Run with    : ansible-playbook -i inventory.ini gateway.yml
+# Purpose     : Install Docker, deploy a private registry container, and
+#               configure Nginx as a reverse proxy for the registry domain.
+# =============================================================================
+
 - name: Gateway — Private Docker Registry (Task 4)
   hosts: gateway        # only runs on the gateway group from inventory.ini
   become: yes           # all tasks require root / sudo
 
   vars:
+    # -------------------------------------------------------------------------
+    # Registry settings
+    # -------------------------------------------------------------------------
     registry_domain: "registry.rizal.studentdumbways.my.id"
-    registry_port: 5000                     
-    registry_data_dir: /opt/docker-registry 
+    registry_port: 5000                     # internal port the container listens on
+    registry_data_dir: /opt/docker-registry # persistent volume path on the host
 
   tasks:
 
     # =========================================================================
     # SECTION 1 — Install Docker
     # =========================================================================
-    
+
+    # Install packages required before we can add the Docker apt repository
     - name: Install Docker prerequisites
       apt:
         name:
@@ -23,18 +36,21 @@
           - lsb-release
         state: present
         update_cache: yes
-        
+
+    # Add Docker's official GPG key so apt can verify packages
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
 
+    # Add the stable Docker apt repository for Ubuntu 22.04
     - name: Add Docker apt repository
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
 
+    # Install Docker Engine and the Compose plugin
     - name: Install Docker Engine
       apt:
         name:
@@ -46,12 +62,15 @@
         state: present
         update_cache: yes
 
+    # Make sure the Docker daemon is running and set to start on boot
     - name: Enable and start Docker service
       service:
         name: docker
         state: started
         enabled: yes
 
+    # Required by the community.docker.docker_container module below.
+    # Without this the playbook fails with "No module named 'docker'".
     - name: Install Docker Python SDK
       apt:
         name: python3-docker
@@ -77,12 +96,19 @@
     # SECTION 2 — Deploy Private Registry Container
     # =========================================================================
 
+    # Create the directory that will be bind-mounted into the container.
+    # This ensures image layers are persisted even if the container is recreated.
     - name: Create registry data directory
       file:
         path: "{{ registry_data_dir }}"
         state: directory
         mode: "0755"
 
+    # Pull and run the official registry:2 image.
+    # --restart=always  → survives reboots
+    # -v               → mounts host dir so image data is not lost
+    # -p 5000:5000     → binds the container port to localhost only
+    #                    (Nginx will proxy from the public domain to this)
     - name: Run Docker Registry container
       community.docker.docker_container:
         name: docker-registry
@@ -103,35 +129,21 @@
         name: nginx
         state: present
 
+    # Deploy the Nginx virtual-host config using a Jinja2 template.
+    # proxy_pass          → forwards all traffic to the registry container
+    # client_max_body_size → Docker image layers can be several hundred MB;
+    #                        default 1 MB limit would cause 413 errors.
     - name: Write Nginx virtual-host for registry
-      copy:
+      template:
+        src: templates/registry.conf.j2
         dest: /etc/nginx/sites-available/docker-registry
-        content: |
-          # Nginx reverse proxy for Docker Registry — Task 4
-          server {
-              listen 80;
-              server_name {{ registry_domain }};
-
-              # Increase body size limit — Docker image layers can be large
-              client_max_body_size 2048m;
-
-              location / {
-                  proxy_pass         http://127.0.0.1:{{ registry_port }};
-                  proxy_set_header   Host              $host;
-                  proxy_set_header   X-Real-IP         $remote_addr;
-                  proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-                  proxy_set_header   X-Forwarded-Proto $scheme;
-
-                  # Required for Docker registry v2 chunked uploads
-                  proxy_buffering    off;
-                  proxy_request_buffering off;
-              }
-          }
         owner: root
         group: root
         mode: "0644"
-      notify: Reload Nginx
+      notify: Reload Nginx   # trigger the handler below when config changes
 
+    # Enable the site by creating a symlink in sites-enabled
+    # (Nginx only reads configs from sites-enabled by default on Ubuntu)
     - name: Enable docker-registry site
       file:
         src: /etc/nginx/sites-available/docker-registry
@@ -139,16 +151,19 @@
         state: link
       notify: Reload Nginx
 
+    # Remove the default Nginx site to avoid conflicts on port 80
     - name: Remove default Nginx site
       file:
         path: /etc/nginx/sites-enabled/default
         state: absent
       notify: Reload Nginx
 
+    # Validate Nginx config before reloading — catches typos early
     - name: Test Nginx configuration syntax
       command: nginx -t
       changed_when: false
 
+    # Make sure Nginx is running and will start on boot
     - name: Enable and start Nginx
       service:
         name: nginx
@@ -159,6 +174,8 @@
     # SECTION 4 — Smoke-test the Registry
     # =========================================================================
 
+    # Hit the v2 API root — a healthy registry returns HTTP 200 with {}
+    # retries=5 / delay=5 gives the container a moment to fully start
     - name: Verify registry API is responding
       uri:
         url: "http://127.0.0.1:{{ registry_port }}/v2/"
@@ -177,6 +194,7 @@
   # ===========================================================================
   handlers:
 
+    # Gracefully reload Nginx without dropping active connections
     - name: Reload Nginx
       service:
         name: nginx
