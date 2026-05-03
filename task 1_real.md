@@ -111,7 +111,7 @@ Here are the structure of Terraform's directory:
 -    ├── [providers.tf](https://github.com/ryuushiro/private/blob/main/files/task1/profiders.tf)<br>
 -    ├── [variables.tf](https://github.com/ryuushiro/private/blob/main/files/task1/variables.tf)<br>
 -    ├── [main.tf](https://github.com/ryuushiro/private/blob/main/files/task1/main.tf)<br>
--    ├── [dns.tf]([https:](https://github.com/ryuushiro/private/blob/main/files/task1/dns.tf))<br>
+-    ├── [dns.tf]([https:](https://github.com/ryuushiro/private/blob/main/files/task1/dns.tf)<br>
 -    └── [outputs.tf](https://github.com/ryuushiro/private/blob/main/files/task1/outputs.tf) <br>
 
 ---
