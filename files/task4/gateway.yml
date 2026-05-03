@@ -57,6 +57,22 @@
         name: python3-docker
         state: present
 
+    # Allow Docker to push/pull from our HTTP registry.
+    # Remove this block once Task 8 adds SSL.
+    - name: Configure Docker insecure registry
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "insecure-registries": ["{{ registry_domain }}"]
+          }
+        mode: "0644"
+
+    - name: Restart Docker to apply insecure-registries
+      service:
+        name: docker
+        state: restarted
+
     # =========================================================================
     # SECTION 2 — Deploy Private Registry Container
     # =========================================================================
