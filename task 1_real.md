@@ -146,6 +146,10 @@ Here are the structure of Terraform's directory:
 - When done, the outputs.tf gonna show you the IPs
   <img width="440" height="159" alt="image" src="https://github.com/user-attachments/assets/0a1227da-8ee3-4e9c-80d4-2f39501a6c84" />
 
+- You can also check your cloudflare DNS records to see if the subdomains already registered.
+  <img width="1296" height="735" alt="image" src="https://github.com/user-attachments/assets/00d0e590-8d67-497a-bdde-d7015f852b94" />
+
+
 
 
 
