@@ -99,8 +99,15 @@
 - After token creation success, you'd be shown your API Token. IMMEDIATELY COPY THE TOKEN AND SAVE IT BECAUSE IT'LL ONLY SHOWN ONCE!
   <img width="738" height="269" alt="image" src="https://github.com/user-attachments/assets/033ae26a-cb5d-4148-a748-bdf900d32d4f" />
 
-- s
-- 
+- After creating the API token, run these so that Terraform remember your token locally.
+
+  ```bash
+  export TF_VAR_cloudflare_api_token="your_actual_api_token_here"
+  export TF_VAR_cloudflare_zone_id="your_actual_zone_id_here"
+  ```
+- To get zone id token, go to overview page of the domain (studentdumbways.my.id), then scroll down until you found API ZONE ID on the bottom right of the page.
+  <img width="672" height="866" alt="image" src="https://github.com/user-attachments/assets/e83dbc55-2a20-49ea-b19c-0dafbf6752b0" />
+
 
 ## Building with Terraform
 Here are the structure of Terraform's directory:
