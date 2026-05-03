@@ -1,5 +1,5 @@
 # Task 1: Provisioning (Infrastructure as Code)
-## Checking Terraform and Ansible Availibility
+## Checking Terraform and Ansible Availability
 -	Check Terraform version
  <img width="683" height="98" alt="image" src="https://github.com/user-attachments/assets/2861221b-453d-4214-9d10-3c62a2c35e20" /><br>
 
@@ -71,6 +71,37 @@
    <img width="949" height="48" alt="image" src="https://github.com/user-attachments/assets/040834bf-9884-48aa-919c-797a085e831a" />
    <img width="936" height="127" alt="image" src="https://github.com/user-attachments/assets/6c90e865-854e-4fce-8f2a-4158d336ddc8" />
 
+## Create Cloudflare's API Token for DNS Records.
+
+ > **Note on Architecture Strategy:** Even though these domains are officially listed as requirements for later tasks like Task 4 and Task 8, I am provisioning them declaratively here in Task 1. This ensures that as soon as the Gateway server spins up, the DNS routes are instantly mapped. This creates a clean, blocker-free pipeline for the subsequent Nginx reverse proxy and Docker Registry setups without needing to pause for manual DNS propagation later..
+
+- First, login to https://dash.cloudflare.com
+  <img width="1872" height="775" alt="image" src="https://github.com/user-attachments/assets/70a8881d-8208-472e-8992-3e0c37964e27" />
+
+- On top left, click your avatar > "Profile"
+  <img width="177" height="252" alt="image" src="https://github.com/user-attachments/assets/a1627adb-6fbe-4ce1-b8cf-d86507b3c5b0" />
+
+- Then, on left panel, click API Tokens.
+  <img width="225" height="273" alt="image" src="https://github.com/user-attachments/assets/88f8e130-d959-43fc-b64f-7b89dfbd8989" />
+
+- On "User API Token", click the "+ Create Token" button
+  <img width="1265" height="180" alt="image" src="https://github.com/user-attachments/assets/169ab2f4-5cc7-4620-b3d7-27dd93aebe74" />
+
+- You'll be passed to API Token template page. Click "Create custom token"
+  <img width="702" height="879" alt="image" src="https://github.com/user-attachments/assets/8acff0dd-b5ec-4d57-a9a1-434f11bd4001" />
+
+- In the next page, write the name of the token then fill the permissions that we want. Because we only need to write DNS record and read the zone, we just gonna open the two. For Client IP Filtering, just leave it blank for now, you can edit it later with your servers' static IP after `terraform apply`. After you're done, click "Continue to summary".
+  <img width="975" height="515" alt="image" src="https://github.com/user-attachments/assets/0a263e09-cc5f-431c-a3f2-67d12e5f1a81" />
+
+- In the summary page, you can see your API token summary. If you're confident with it, then click "Create token"
+  <img width="975" height="394" alt="image" src="https://github.com/user-attachments/assets/415010ae-b233-468e-9183-e6379d9f8ebd" />
+
+- After token creation success, you'd be shown your API Token. IMMEDIATELY COPY THE TOKEN AND SAVE IT BECAUSE IT'LL ONLY SHOWN ONCE!
+  <img width="738" height="269" alt="image" src="https://github.com/user-attachments/assets/033ae26a-cb5d-4148-a748-bdf900d32d4f" />
+
+- s
+- 
+
 ## Building with Terraform
 Here are the structure of Terraform's directory:
 
@@ -80,7 +111,7 @@ Here are the structure of Terraform's directory:
 -    ├── [providers.tf](https://github.com/ryuushiro/private/blob/main/files/task1/profiders.tf)<br>
 -    ├── [variables.tf](https://github.com/ryuushiro/private/blob/main/files/task1/variables.tf)<br>
 -    ├── [main.tf](https://github.com/ryuushiro/private/blob/main/files/task1/main.tf)<br>
--    ├── dns.tf (for task 8)<br>
+-    ├── [dns.tf]([https:](https://github.com/ryuushiro/private/blob/main/files/task1/dns.tf))<br>
 -    └── [outputs.tf](https://github.com/ryuushiro/private/blob/main/files/task1/outputs.tf) <br>
 
 ---
@@ -88,12 +119,10 @@ Here are the structure of Terraform's directory:
 *   **`providers.tf`**: This file tells Terraform which external services it needs to talk to. In your case, it configures the connection to **AWS** (to create the servers) and **Cloudflare** (to manage your DNS records). It specifies the required versions for these plugins.
 *   **`variables.tf`**: This file acts as a dictionary for all the customizable inputs your infrastructure needs. It defines variables like your Cloudflare API token, zone ID, the AWS region you want to deploy in, and potentially the size of the servers you want to use. Using variables makes your code reusable.
 *   **`main.tf`**: This is the core of your infrastructure code. It contains the actual definitions of the cloud resources you want to create on AWS. This is where you declare your Gateway server, your three Appservers (k3s master and workers), and the Security Groups (firewall rules) that allow SSH and web traffic.
-*   **`dns.tf`**: This file is specifically separated to handle the **Cloudflare** resources. It defines the 8 `A` records required by Task 8 (e.g., `api.rizal...`, `staging.rizal...`, `monitoring...`) and points all of those subdomains to the public IP address of your newly created Gateway server.
+*   **`dns.tf`**: This file handles the **Cloudflare** resources. It defines the 8 `A` records required by Task 8 (e.g., `api.rizal.studentdumbways.my.id`, `staging.rizal...`, `monitoring...`) and points all of those subdomains to the public IP address of the newly created Gateway server. 
 *   **`outputs.tf`**: After Terraform finishes building your infrastructure, this file tells Terraform what information to print out to the screen. For this project, it is configured to output the generated **Public and Private IP addresses** of your Gateway and Appservers so that you can easily use them in your Ansible inventory later.
 
 <img width="825" height="86" alt="image" src="https://github.com/user-attachments/assets/378f12f6-c610-40c0-990a-4f8c4701128a" />
-
-( `dns.tf` is disabled for now until task 8)
 
 - run `terraform init` to initialize
   <img width="944" height="445" alt="image" src="https://github.com/user-attachments/assets/69694b00-37c0-4f26-a4fe-17d34837d0c6" />
