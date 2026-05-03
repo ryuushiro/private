@@ -1,0 +1,167 @@
+---
+- name: Gateway — Private Docker Registry (Task 4)
+  hosts: gateway        # only runs on the gateway group from inventory.ini
+  become: yes           # all tasks require root / sudo
+
+  vars:
+    registry_domain: "registry.rizal.studentdumbways.my.id"
+    registry_port: 5000                     
+    registry_data_dir: /opt/docker-registry 
+
+  tasks:
+
+    # =========================================================================
+    # SECTION 1 — Install Docker
+    # =========================================================================
+    
+    - name: Install Docker prerequisites
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+        
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Install Docker Engine
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Enable and start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker Python SDK
+      apt:
+        name: python3-docker
+        state: present
+
+    # =========================================================================
+    # SECTION 2 — Deploy Private Registry Container
+    # =========================================================================
+
+    - name: Create registry data directory
+      file:
+        path: "{{ registry_data_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Run Docker Registry container
+      community.docker.docker_container:
+        name: docker-registry
+        image: registry:2
+        state: started
+        restart_policy: always
+        ports:
+          - "127.0.0.1:{{ registry_port }}:5000"   # bind to localhost only — Nginx proxies
+        volumes:
+          - "{{ registry_data_dir }}:/var/lib/registry"
+
+    # =========================================================================
+    # SECTION 3 — Install & Configure Nginx Reverse Proxy
+    # =========================================================================
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Write Nginx virtual-host for registry
+      copy:
+        dest: /etc/nginx/sites-available/docker-registry
+        content: |
+          # Nginx reverse proxy for Docker Registry — Task 4
+          server {
+              listen 80;
+              server_name {{ registry_domain }};
+
+              # Increase body size limit — Docker image layers can be large
+              client_max_body_size 2048m;
+
+              location / {
+                  proxy_pass         http://127.0.0.1:{{ registry_port }};
+                  proxy_set_header   Host              $host;
+                  proxy_set_header   X-Real-IP         $remote_addr;
+                  proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+                  proxy_set_header   X-Forwarded-Proto $scheme;
+
+                  # Required for Docker registry v2 chunked uploads
+                  proxy_buffering    off;
+                  proxy_request_buffering off;
+              }
+          }
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload Nginx
+
+    - name: Enable docker-registry site
+      file:
+        src: /etc/nginx/sites-available/docker-registry
+        dest: /etc/nginx/sites-enabled/docker-registry
+        state: link
+      notify: Reload Nginx
+
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+
+    - name: Test Nginx configuration syntax
+      command: nginx -t
+      changed_when: false
+
+    - name: Enable and start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # =========================================================================
+    # SECTION 4 — Smoke-test the Registry
+    # =========================================================================
+
+    - name: Verify registry API is responding
+      uri:
+        url: "http://127.0.0.1:{{ registry_port }}/v2/"
+        method: GET
+        status_code: 200
+      retries: 5
+      delay: 5
+      register: registry_check
+
+    - name: Print registry health result
+      debug:
+        msg: "Registry API returned status: {{ registry_check.status }} — registry is healthy!"
+
+  # ===========================================================================
+  # HANDLERS — only run when notified by a task
+  # ===========================================================================
+  handlers:
+
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
