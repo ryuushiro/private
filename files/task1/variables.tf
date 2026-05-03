@@ -8,7 +8,6 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_rsa_final_task.pub"
 }
 
-/*
 variable "cloudflare_api_token" {
   description = "Cloudflare API Token"
   type        = string
@@ -22,6 +21,5 @@ variable "cloudflare_zone_id" {
 
 variable "student_name" {
   description = "Student name for subdomains"
-  default     = "rizal"
+  default     = "rizaladlan"
 }
-*/
