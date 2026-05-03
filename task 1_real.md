@@ -105,6 +105,9 @@
   export TF_VAR_cloudflare_api_token="your_actual_api_token_here"
   export TF_VAR_cloudflare_zone_id="your_actual_zone_id_here"
   ```
+  <img width="1000" height="76" alt="image" src="https://github.com/user-attachments/assets/56e8c2a4-7fa3-41f3-8508-9666981c3299" />
+
+  
 - To get zone id token, go to overview page of the domain (studentdumbways.my.id), then scroll down until you found API ZONE ID on the bottom right of the page.
   <img width="672" height="866" alt="image" src="https://github.com/user-attachments/assets/e83dbc55-2a20-49ea-b19c-0dafbf6752b0" />
 
