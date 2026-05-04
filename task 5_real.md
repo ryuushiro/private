@@ -43,7 +43,7 @@ Run these commands in your WSL terminal:
 - After that, push it.
   <img width="975" height="315" alt="image" src="https://github.com/user-attachments/assets/27f5ddc6-9e5b-4c38-b738-46bec4816b80" />
 
-## Step 3: Setup `appserver.yml`
+## Step 3: Setup `appserver.yml` and `be.env.j2`
 
 Inside `appserver.yml`, there are two plays/stages.
    - Play 1: Docker Setup
@@ -62,4 +62,52 @@ Inside `appserver.yml`, there are two plays/stages.
       | Backend container | Pulls `16.79.152.201:80/be-dumbmerch:Staging`, mounts `.env` as read-only |
       | Frontend container | Pulls `16.79.152.201:80/fe-dumbmerch:Staging`, serves on port 3000 |
       | Smoke tests | Verifies FE returns 200, BE returns 200/404 |
+     
+      <img width="529" height="465" alt="image" src="https://github.com/user-attachments/assets/7d8993b1-a118-4f17-80eb-6420ddae3876" />*Example of installing PostgresSQL on top of Docker*.
+
+Then, as written above, the .env file need to be imported from `templates/be.env.j2`.
+<img width="428" height="106" alt="image" src="https://github.com/user-attachments/assets/a592d26f-60d7-4eab-baef-03231a9e58b0" />
+So, for that, create the file.
+<img width="390" height="139" alt="image" src="https://github.com/user-attachments/assets/b3b3ddd4-5a64-4e2b-8e70-067fbac4a47d" />
+
+## Step 4: Run appserver playbook
+Run `ansible-playbook -i inventory.ini appserver.yml`
+<img width="1264" height="729" alt="image" src="https://github.com/user-attachments/assets/c2a0fabf-1726-44ee-b2b0-bb6306650aff" />
+<img width="1255" height="902" alt="image" src="https://github.com/user-attachments/assets/9def709b-e5ac-4204-856b-14e3ea46530e" />
+<img width="1260" height="83" alt="image" src="https://github.com/user-attachments/assets/385c012e-80d1-4b5a-8441-264eb5396197" />
+
+## Step 5: Verification
+
+### 5.1 Frontend
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://108.137.104.154:3000/
+curl -s -o /dev/null -w "%{http_code}\n" http://15.232.78.179:3000/
+# Expected: 200 on all two
+```
+<img width="845" height="104" alt="image" src="https://github.com/user-attachments/assets/954e4e40-ebc1-4a2b-85dc-3e1382f8544e" /><br>
+<img width="1919" height="1151" alt="image" src="https://github.com/user-attachments/assets/471234e9-e98d-45ef-8346-665bad88b211" />
+
+### 5.2 Backend API
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://108.137.104.154:5000/api/v1/products
+curl -s -o /dev/null -w "%{http_code}\n" http://15.232.78.179:5000/api/v1/products
+# Expected: 200 on all two
+```
+
+<img width="941" height="98" alt="image" src="https://github.com/user-attachments/assets/4fd309e2-6eaa-4242-9bfa-73f36e584594" />
+
+### 5.3 Database
+
+```bash
+# SSH into any appserver and run:
+docker exec dumbmerch-db psql -U rizaladlan -d dumbmerch -c '\dt'
+```
+<img width="781" height="743" alt="image" src="https://github.com/user-attachments/assets/cf0a9f47-0872-4545-a6f8-16cff5af5529" />
+
+
+
+
+
 
