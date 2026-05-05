@@ -255,3 +255,70 @@ receivers:
 {% endraw %}
 
 ```
+
+# 3. Setup Telegram Bot
+## 3.1 Create a Bot and Get the Token
+- Chat @BotFather on Telegram "/newbot". After that, give it the bot name for the project and also the Telegram handle (@). After that, you'd get your API token.
+<img width="804" height="740" alt="image" src="https://github.com/user-attachments/assets/83fe10a0-e596-4510-a25a-99600309939a" />
+
+## 3.2 Get a Chat ID from Your Bot
+- After that, chat the new bot. Start a new conversation, anything can goes for a dummy message.
+<img width="626" height="416" alt="image" src="https://github.com/user-attachments/assets/88425f11-7fd4-46a8-abb1-b8deffdcfbd5" />
+<br>
+
+- Then, to get your Chat ID, go to https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates and search for numbers after "update_id":
+<img width="673" height="276" alt="image" src="https://github.com/user-attachments/assets/d675b454-8370-484a-ac9f-915ba46f4a2a" />
+
+# 4. Setup Vault (For Grafana Password and Telegram Token)
+## Grafana
+Inside `monitoring.yml`, Grafana's User's ID and Password is already set with variable `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_PASSWORD`.
+```yml
+    # --- Grafana ---
+    - name: Run Grafana container
+      community.docker.docker_container:
+        name: grafana
+        image: grafana/grafana:latest
+        state: started
+        restart_policy: always
+        published_ports:
+          - "3000:3000"
+        env:
+          GF_SECURITY_ADMIN_USER: admin
+          GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+```
+
+Now, the 'GF_SECURITY_ADMIN_PASSWORD` can be set inside Ansible Vault.<br>
+For example:
+
+```ini
+vault_grafana_admin_password: admin123
+```
+
+## Telegram
+For Telegram, the variable `telegram_bot_token` and `telegram_chat_id` are mentioned inside `alertmanager.yml.j2`.
+
+```python
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '{{ telegram_bot_token }}'
+        chat_id: {{ telegram_chat_id }}
+        parse_mode: 'HTML'
+```
+
+Same as Grafana before, both of them can be set inside Ansible Vault.
+
+```ini
+vault_telegram_bot_token: PLACEHOLDER_BOT_TOKEN
+vault_telegram_chat_id: "PLACEHOLDER_ID"
+```
+
+## Editing the Vault
+First, run this:
+
+```bash
+cd ~/infrastructure/ansible
+EDITOR=nano ansible-vault edit --vault-password-file .ansible_vault_pass group_vars/all/vault.yml
+```
+
+
