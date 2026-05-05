@@ -63,7 +63,7 @@ Inside `appserver.yml`, there are two plays/stages.
       | Frontend container | Pulls `16.79.152.201:80/fe-dumbmerch:Staging`, serves on port 3000 |
       | Smoke tests | Verifies FE returns 200, BE returns 200/404 |
      
-      <img width="529" height="465" alt="image" src="https://github.com/user-attachments/assets/7d8993b1-a118-4f17-80eb-6420ddae3876" />*Example of installing PostgresSQL on top of Docker*.
+      <img width="529" height="465" alt="image" src="https://github.com/user-attachments/assets/7d8993b1-a118-4f17-80eb-6420ddae3876" />*Example of installing PostgreSQL on top of Docker*.
 
 Then, as written above, the .env file need to be imported from `templates/be.env.j2`.
 <img width="428" height="106" alt="image" src="https://github.com/user-attachments/assets/a592d26f-60d7-4eab-baef-03231a9e58b0" />
@@ -105,6 +105,59 @@ curl -s -o /dev/null -w "%{http_code}\n" http://15.232.78.179:5000/api/v1/produc
 docker exec dumbmerch-db psql -U rizaladlan -d dumbmerch -c '\dt'
 ```
 <img width="781" height="743" alt="image" src="https://github.com/user-attachments/assets/cf0a9f47-0872-4545-a6f8-16cff5af5529" />
+
+## Step 6: Load Balancing Challenge
+
+### 6.1 Create the Loadbalancer Config Template
+ Create `/home/rzl/infrastructure/ansible/templates/loadbalancer.conf.j2`:
+
+   ```.py
+   # Nginx Load Balancer — Task 5 Challenge
+   # Distributes traffic across app_nodes (Appserver 2 & 3)
+   
+   upstream frontend_pool {
+       server 108.137.104.154:3000;
+       server 15.232.78.179:3000;
+   }
+   
+   upstream backend_pool {
+       server 108.137.104.154:5000;
+       server 15.232.78.179:5000;
+   }
+   
+   server {
+       listen 80;
+       server_name staging.rizaladlan.studentdumbways.my.id;
+   
+       location / {
+           proxy_pass http://frontend_pool;
+           proxy_set_header Host              $host;
+           proxy_set_header X-Real-IP         $remote_addr;
+           proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+       }
+   }
+   
+   server {
+       listen 80;
+       server_name api.staging.rizaladlan.studentdumbways.my.id;
+   
+       location / {
+           proxy_pass http://backend_pool;
+           proxy_set_header Host              $host;
+           proxy_set_header X-Real-IP         $remote_addr;
+           proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+       }
+   }
+   
+   ```
+### 6.2 Add Tasks to `gateway.yml`
+<img width="698" height="459" alt="image" src="https://github.com/user-attachments/assets/a4ec24e4-37f1-459f-9d24-0cd14beb4937" />
+
+### 6.3 RUN
+<img width="1257" height="1035" alt="image" src="https://github.com/user-attachments/assets/a545a91d-4195-4bfd-826d-34d78fc97317" />
+<img width="1239" height="311" alt="image" src="https://github.com/user-attachments/assets/8d85a04e-f4f6-46f9-a920-75166ec775fe" />
+
+
 
 
 
