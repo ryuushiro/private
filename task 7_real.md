@@ -335,3 +335,40 @@ vault_telegram_chat_id: "PLACEHOLDER_ID"
 To continue to the next steps, `monitoring.yml` need to be applied to the servers.<br>
 Run `ansible-playbook -i inventory.ini monitoring.yml`.
 <img width="986" height="1011" alt="image" src="https://github.com/user-attachments/assets/94cc330f-29a4-4fd2-bf2e-e61fff4de6b8" />
+
+
+## 6. Monitoring Apps
+### 6.1 Grafana Connection
+- Login to Grafana and click "Data Source" on the left panel.
+  <img width="1850" height="988" alt="image" src="https://github.com/user-attachments/assets/aa7595f3-4d99-4bd1-99c3-f76defb9b570" />
+
+- Inside the Data Source page, click "Add new data source"
+  <img width="1550" height="149" alt="image" src="https://github.com/user-attachments/assets/cfadf6d9-82a8-415f-84ce-8d23ecdc6d45" />
+
+- Pick "Premetheus"
+  <img width="1543" height="262" alt="image" src="https://github.com/user-attachments/assets/da51892e-e405-4242-b0e7-463040e0d15c" />
+
+- In the next page, put Premetheus' IP:PORT to Connection text-box, then click "Save & Test" at the bottom of the page.
+  <img width="1534" height="686" alt="image" src="https://github.com/user-attachments/assets/5935cc76-82ee-4be3-88fa-65f4400a5170" />
+
+### 6.2 Grafana Dashboard
+- Go to Dashboard and click "New > New Dashboard" at the right side of the page, 
+  <img width="1556" height="173" alt="image" src="https://github.com/user-attachments/assets/a5df5591-a6d2-46b9-928c-706f3dface8e" />
+
+- In the New Dashboard page, click the blue "+" on the right side of the page and click "Add new panel"
+  <img width="1580" height="746" alt="image" src="https://github.com/user-attachments/assets/db3d13fb-0750-4db9-b08c-7aacd1eb3410" />
+
+- After that "Configure visualization"
+  <img width="721" height="434" alt="image" src="https://github.com/user-attachments/assets/e309a824-d9c7-4c1f-930b-7106b46391ff" />
+
+- Now, in this page, change from "Builder" to "Code" on the metric query search, then you can input the PromQL for the things that you want to show on the dashboard. 
+  <img width="1574" height="914" alt="image" src="https://github.com/user-attachments/assets/6eca1d34-b086-416d-8bdd-6324f04da98b" />
+
+- For example, with this one the PromQL Query shows how much RAM usage in percentage
+  <img width="1572" height="916" alt="image" src="https://github.com/user-attachments/assets/e5bb730c-5691-463d-97d6-02b17ac8a2ab" />
+
+- Here are the full dashboard according to the task
+  <img width="1699" height="851" alt="image" src="https://github.com/user-attachments/assets/4e8c8d63-40af-4abb-83fd-9894a33da109" />
+
+ ### 6.2 Telegram Alerts
+ Before, the telegram bot's API was already taken care of.
