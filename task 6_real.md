@@ -1,6 +1,6 @@
 # Task 6: CI/CD (ft. SonarCloud)
 
-## Step 1: SonarCloud Project Setup
+## Step 1: SonarCloud Project Setup + `.gitlab-ci.yml`
 
 > Due to RAM constraints on the AWS server, SonarCloud is employed as the preferred solution. SonarCloud is the *SonarQube-as-a-Service* from the same company (SonarSource). Same sonar-scanner CLI, same analysis engine, same Quality Gates, same dashboard.
 
@@ -234,4 +234,17 @@
   
   ```
   
-- s
+## Step 2: GitLab Pipeline
+
+### 2.1 Push both BE and FE to GitLab
+<img width="832" height="811" alt="image" src="https://github.com/user-attachments/assets/90c9e619-acd3-4661-ae5b-65c7edc58d0c" />
+
+### 2.2 Watch Pipeline in GitLab
+1. Go to GitLab → CI/CD → Pipelines
+2. Click the pipeline to see all 4 stages
+3. If any stage fails, click the failed job to see logs
+
+<img width="975" height="476" alt="image" src="https://github.com/user-attachments/assets/1da0bb9f-1070-45e3-9190-7261d1b667c6" />*BE Staging Branch's Pipeline showing what's running*
+
+<img width="975" height="469" alt="image" src="https://github.com/user-attachments/assets/54288fc7-97ff-46d2-b439-a66a1183215d" />*FE Staging Branch's Pipeline showing what's running*
+
