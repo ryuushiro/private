@@ -240,11 +240,11 @@
 <img width="832" height="811" alt="image" src="https://github.com/user-attachments/assets/90c9e619-acd3-4661-ae5b-65c7edc58d0c" />
 
 ### 2.2 Watch Pipeline in GitLab
-1. Go to GitLab → CI/CD → Pipelines
+1. Go to GitLab → Build → Pipelines
 2. Click the pipeline to see all 4 stages
 3. If any stage fails, click the failed job to see logs
 
-<img width="975" height="476" alt="image" src="https://github.com/user-attachments/assets/1da0bb9f-1070-45e3-9190-7261d1b667c6" />*BE Staging Branch's Pipeline showing what's running*
+<img width="1257" height="626" alt="image" src="https://github.com/user-attachments/assets/9c47e5df-7d61-4903-9578-992d2abab83e" />*BE Staging Branch's Pipeline showing what's running*
 
-<img width="975" height="469" alt="image" src="https://github.com/user-attachments/assets/54288fc7-97ff-46d2-b439-a66a1183215d" />*FE Staging Branch's Pipeline showing what's running*
+<img width="1246" height="620" alt="image" src="https://github.com/user-attachments/assets/4d1537a6-7004-4caf-87e3-e3b1ceae64c1" />*FE Staging Branch's Pipeline showing what's running*
 
