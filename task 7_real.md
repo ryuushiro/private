@@ -147,3 +147,111 @@ Create a playbook to install monitoring softwares in servers:
 
 ```
 
+## 2. Setup `/template/...j2` files
+### 2.1 Prometheus.yml.j2
+Scrape targets for all 4 servers + cAdvisor
+
+```python
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets:
+          - '16.79.152.201:9100'
+          - '108.137.128.226:9100'
+          - '108.137.104.154:9100'
+          - '15.232.78.179:9100'
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['localhost:8080']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+```
+
+### 2.2 `alerts.yml.j2`
+4 alert rules (CPU >80%, RAM >85%, Disk <15%, Network)
+
+```python
+{% raw %}
+groups:
+  - name: server_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+
+      - alert: HighNetworkReceive
+        expr: rate(node_network_receive_bytes_total{device!="lo"}[5m]) * 8 > 100000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High network receive on {{ $labels.instance }} ({{ $labels.device }})"
+{% endraw %}
+
+```
+
+### 2.3 `alertmanager.yml.j2`
+Telegram routing with bot token and chat ID
+
+```python
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'telegram'
+  group_by: ['alertname', 'instance']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 4h
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '{{ telegram_bot_token }}'
+        chat_id: {{ telegram_chat_id }}
+        parse_mode: 'HTML'
+{% raw %}
+        message: |
+          <b>{{ .Status | toUpper }}</b>: {{ .CommonAnnotations.summary }}
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ end }}
+{% endraw %}
+
+```
