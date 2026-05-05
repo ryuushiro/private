@@ -60,19 +60,20 @@
   
 - Following the guide 1: add env. variables (add both to BE and FE project)
   
-  <img width="991" height="348" alt="image" src="https://github.com/user-attachments/assets/5631949e-6509-4677-b40a-383531812e1e" /><br>
+  <img width="985" height="356" alt="image" src="https://github.com/user-attachments/assets/a5cd5740-4891-4188-8864-75a3d3d4e599" /><br>
   
   
   | Variable | Value | Protected | Masked |
   |----------|-------|-----------|--------|
-  | `SONAR_TOKEN` | SonarCloud token (from step 4.2) | Yes | Yes |
+  | `SONAR_TOKEN` | SonarCloud token (from step 4.2) | No | Yes |
   | `SONAR_HOST_URL` | `https://sonarcloud.io` | No | No |
-  | `SSH_PRIVATE_KEY` | base64-encoded key (`base64 -w0 < ~/.ssh/id_rsa_final_task`) | Yes | Yes |
+  | `SSH_PRIVATE_KEY` | `~/.ssh/id_rsa_final_task` | Yes | No |
   | `ANSIBLE_VAULT_PASS` | Contents of `.ansible_vault_pass` | Yes | Yes |
   | `REGISTRY_URL` | `16.79.152.201:80` | No | No |
 <br>
 
-- Following the guide 2: update `.gitlab-ci.yml`
+## Step 2: GitLab Pipeline
+### 2.1 Following the guide from SonarCloud 2: update `.gitlab-ci.yml`
   
   This one is for BE.
   
@@ -84,15 +85,18 @@
     - deploy
   
   variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
     IMAGE_TAG: $REGISTRY_URL/be-dumbmerch:Staging
   
   build:
     stage: build
     image: docker:latest
     services:
-      - docker:dind
+      - name: docker:dind
+        command: ["--insecure-registry=16.79.152.201:80"]
     script:
-      - docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
+      - docker build --platform linux/amd64 -t $IMAGE_TAG .
       - docker save -o image.tar $IMAGE_TAG
     artifacts:
       paths:
@@ -116,10 +120,8 @@
     stage: push
     image: docker:latest
     services:
-      - docker:dind
-    before_script:
-      - mkdir -p ~/.docker
-      - echo '{"insecure-registries":["'"$REGISTRY_URL"'"]}' > ~/.docker/config.json
+      - name: docker:dind
+        command: ["--insecure-registry=16.79.152.201:80"]
     script:
       - docker load -i image.tar
       - docker push $IMAGE_TAG
@@ -132,11 +134,16 @@
     before_script:
       - apt-get update && apt-get install -y ansible openssh-client git
       - mkdir -p ~/.ssh
-      - echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa_final_task
+      - chmod 600 ~/.ssh/id_rsa_final_task
+      - cp ~/.ssh/id_rsa_final_task ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
     script:
+      - export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
       - git clone --depth 1 git@gitlab.com:rizaladlan/infrastructure.git /tmp/infrastructure
       - echo "$ANSIBLE_VAULT_PASS" > /tmp/infrastructure/ansible/.ansible_vault_pass
       - cd /tmp/infrastructure/ansible
+      - ansible-galaxy collection install community.docker
       - ansible-playbook -i inventory.ini appserver.yml
     only:
       - Staging
@@ -144,7 +151,7 @@
   
 - This one is for FE
   
-  ```yaml
+```yaml
   stages:
     - build
     - test
@@ -152,15 +159,18 @@
     - deploy
   
   variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
     IMAGE_TAG: $REGISTRY_URL/fe-dumbmerch:Staging
   
   build:
     stage: build
     image: docker:latest
     services:
-      - docker:dind
+      - name: docker:dind
+        command: ["--insecure-registry=16.79.152.201:80"]
     script:
-      - docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
+      - docker build --platform linux/amd64 -t $IMAGE_TAG .
       - docker save -o image.tar $IMAGE_TAG
     artifacts:
       paths:
@@ -184,10 +194,8 @@
     stage: push
     image: docker:latest
     services:
-      - docker:dind
-    before_script:
-      - mkdir -p ~/.docker
-      - echo '{"insecure-registries":["'"$REGISTRY_URL"'"]}' > ~/.docker/config.json
+      - name: docker:dind
+        command: ["--insecure-registry=16.79.152.201:80"]
     script:
       - docker load -i image.tar
       - docker push $IMAGE_TAG
@@ -200,18 +208,31 @@
     before_script:
       - apt-get update && apt-get install -y ansible openssh-client git
       - mkdir -p ~/.ssh
-      - echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa_final_task
+      - chmod 600 ~/.ssh/id_rsa_final_task
+      - cp ~/.ssh/id_rsa_final_task ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
     script:
+      - export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
       - git clone --depth 1 git@gitlab.com:rizaladlan/infrastructure.git /tmp/infrastructure
       - echo "$ANSIBLE_VAULT_PASS" > /tmp/infrastructure/ansible/.ansible_vault_pass
       - cd /tmp/infrastructure/ansible
+      - ansible-galaxy collection install community.docker
       - ansible-playbook -i inventory.ini appserver.yml
     only:
       - Staging
-  
+
   ```
+
+### 2.2 Pipeline Summary
+| Stage | Job | What it does |
+|-------|-----|-------------|
+| build | `build` | Builds Docker image with `docker:latest` + `docker:dind`, saves as `image.tar` artifact |
+| test | `sonarqube-check` | `sonar-scanner` analyzes code and uploads results to SonarCloud |
+| push | `push` | Loads artifact, pushes to `16.79.152.201:80` (HTTP registry, insecure) |
+| deploy | `deploy` | Clones infra repo, installs Ansible + community.docker, runs `appserver.yml` to SSH/pull/redeploy |
   
-- Following the guide 3: create `sonar-project.properties`
+### 2.3 Following the guide 3: create `sonar-project.properties`
   
   This one is for BE
   
@@ -220,8 +241,7 @@
   sonar.organization=rizaladlan
   sonar.sources=.
   sonar.exclusions=**/*_test.go,**/vendor/**
-  sonar.go.coverage.reportPaths=coverage.out
-  
+  sonar.go.coverage.reportPaths=coverage.out  
   ```
   
   This one is for FE
@@ -231,15 +251,41 @@
   sonar.organization=rizaladlan
   sonar.sources=src
   sonar.exclusions=**/*.test.js,**/node_modules/**
-  
   ```
-  
-## Step 2: GitLab Pipeline
 
-### 2.1 Push both BE and FE to GitLab
+### 2.4 Infrastructure Repository
+
+The deploy stage needs Ansible playbooks. These live in a separate repository at `rizaladlan/infrastructure.git` containing only the `ansible/` directory:
+
+```
+infrastructure/
+  ansible/
+    inventory.ini
+    appserver.yml
+    ansible.cfg
+    common.yml
+    gateway.yml
+    site.yml
+    group_vars/
+      all/
+        all.yml
+        vault.yml
+      appservers/
+        vars.yml
+      gateway/
+        vars.yml
+    templates/
+      be.env.j2
+      loadbalancer.conf.j2
+      registry.conf.j2
+```
+
+Sensitive files excluded via `.gitignore`: `.ansible_vault_pass`, `terraform.tfstate`, `.terraform/`. The vault password is injected via CI/CD variable `ANSIBLE_VAULT_PASS` at runtime.
+
+### 2.5 Push both BE and FE to GitLab
 <img width="832" height="811" alt="image" src="https://github.com/user-attachments/assets/90c9e619-acd3-4661-ae5b-65c7edc58d0c" />
 
-### 2.2 Watch Pipeline in GitLab
+### 2.6 Watch Pipeline in GitLab
 1. Go to GitLab → Build → Pipelines
 2. Click the pipeline to see all 4 stages
 3. If any stage fails, click the failed job to see logs
@@ -248,3 +294,30 @@
 
 <img width="1246" height="620" alt="image" src="https://github.com/user-attachments/assets/4d1537a6-7004-4caf-87e3-e3b1ceae64c1" />*FE Staging Branch's Pipeline showing what's running*
 
+## 3. Verification
+### 3.1 Pipeline Status
+The CI/CD pipline will be tagged as "Passed" when clearing all 4 stages.
+<img width="1047" height="126" alt="image" src="https://github.com/user-attachments/assets/f21a25a9-ca67-4b1e-b3c4-b187d59462ba" />
+<img width="1252" height="582" alt="image" src="https://github.com/user-attachments/assets/0ab12bc8-0be2-46da-8f93-b8bc49eb3869" />
+
+### 3.2 SonarCloud Quality Gate
+Open each project on SonarCloud and verify the scan results appear with a passing Quality Gate.
+<img width="1201" height="656" alt="image" src="https://github.com/user-attachments/assets/a7050c96-0d84-4f15-9989-71818634a4b4" />
+
+### 3.3 Deploy Verification
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://108.137.104.154:3000/
+curl -s -o /dev/null -w "%{http_code}\n" http://15.232.78.179:3000/
+curl -s -o /dev/null -w "%{http_code}\n" http://108.137.104.154:5000/api/v1/products
+curl -s -o /dev/null -w "%{http_code}\n" http://15.232.78.179:5000/api/v1/products
+# Expected: 200 on all four
+```
+<img width="940" height="166" alt="image" src="https://github.com/user-attachments/assets/7b9d5f0b-ffff-4e8b-90d9-480a46ee74db" />
+
+### 3.4 App Crawl (wget spider)
+```bash
+wget --spider --recursive --level=2 --no-verbose http://108.137.104.154:3000/
+```
+
+The spider crawls all linked pages recursively and confirms they return 200. Expected "broken links" (favicon.ico, logo192.png) are cosmetic React boilerplate — not real issues.
+<img width="1126" height="428" alt="image" src="https://github.com/user-attachments/assets/8dff8e08-9322-41cd-bf7d-5c0baaee8b55" />
