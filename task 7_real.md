@@ -147,6 +147,7 @@ Create a playbook to install monitoring softwares in servers:
 
 ```
 
+
 ## 2. Setup `/template/...j2` files
 ### 2.1 Prometheus.yml.j2
 Scrape targets for all 4 servers + cAdvisor
@@ -256,12 +257,13 @@ receivers:
 
 ```
 
-# 3. Setup Telegram Bot
-## 3.1 Create a Bot and Get the Token
+
+## 3. Setup Telegram Bot
+### 3.1 Create a Bot and Get the Token
 - Chat @BotFather on Telegram "/newbot". After that, give it the bot name for the project and also the Telegram handle (@). After that, you'd get your API token.
 <img width="804" height="740" alt="image" src="https://github.com/user-attachments/assets/83fe10a0-e596-4510-a25a-99600309939a" />
 
-## 3.2 Get a Chat ID from Your Bot
+### 3.2 Get a Chat ID from Your Bot
 - After that, chat the new bot. Start a new conversation, anything can goes for a dummy message.
 <img width="626" height="416" alt="image" src="https://github.com/user-attachments/assets/88425f11-7fd4-46a8-abb1-b8deffdcfbd5" />
 <br>
@@ -269,8 +271,9 @@ receivers:
 - Then, to get your Chat ID, go to https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates and search for numbers after "update_id":
 <img width="673" height="276" alt="image" src="https://github.com/user-attachments/assets/d675b454-8370-484a-ac9f-915ba46f4a2a" />
 
-# 4. Setup Vault (For Grafana Password and Telegram Token)
-## Grafana
+
+## 4. Setup Vault (For Grafana Password and Telegram Token)
+### 4.1 Grafana
 Inside `monitoring.yml`, Grafana's User's ID and Password is already set with variable `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_PASSWORD`.
 ```yml
     # --- Grafana ---
@@ -294,7 +297,7 @@ For example:
 vault_grafana_admin_password: admin123
 ```
 
-## Telegram
+### 4.2 Telegram
 For Telegram, the variable `telegram_bot_token` and `telegram_chat_id` are mentioned inside `alertmanager.yml.j2`.
 
 ```python
@@ -313,12 +316,22 @@ vault_telegram_bot_token: PLACEHOLDER_BOT_TOKEN
 vault_telegram_chat_id: "PLACEHOLDER_ID"
 ```
 
-## Editing the Vault
-First, run this:
+### 4.3 Editing the Vault
+- First, run this:
 
-```bash
-cd ~/infrastructure/ansible
-EDITOR=nano ansible-vault edit --vault-password-file .ansible_vault_pass group_vars/all/vault.yml
-```
+  ```bash
+  cd ~/infrastructure/ansible
+  EDITOR=nano ansible-vault edit --vault-password-file .ansible_vault_pass group_vars/all/vault.yml
+  ```
+  <img width="714" height="71" alt="image" src="https://github.com/user-attachments/assets/21e587e7-3fb2-46a2-8fdf-b1e1e2ff5fac" />
 
 
+- Then, fill the Vault with the password and tokens
+  <img width="550" height="124" alt="image" src="https://github.com/user-attachments/assets/6782d419-3785-436e-be5d-adf41fc99433" />
+
+
+
+## 5. Applying `monitoring.yml` to Install Apps
+To continue to the next steps, `monitoring.yml` need to be applied to the servers.<br>
+Run `ansible-playbook -i inventory.ini monitoring.yml`.
+<img width="986" height="1011" alt="image" src="https://github.com/user-attachments/assets/94cc330f-29a4-4fd2-bf2e-e61fff4de6b8" />
