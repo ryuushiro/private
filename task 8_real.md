@@ -288,4 +288,30 @@ ssh -t -i ~/.ssh/id_rsa_final_task gateway "sudo certbot certificates"
 ```
 <img width="859" height="308" alt="image" src="https://github.com/user-attachments/assets/590fcb4f-119b-48eb-a678-2b9d86a35f2a" />
 
+# 4. Cronjob
+## 4.1 Renewal Script
+Template: `templates/cert-renewal.sh.j2`
 
+```sh
+#!/bin/bash
+# Certbot auto-renewal script for *.rizaladlan.studentdumbways.my.id
+# Runs daily via cron. Renews if < 30 days remaining.
+
+LOG="/var/log/certbot-renewal.log"
+
+echo "[$(date)] Starting certbot renewal check..." >> "$LOG"
+
+certbot renew --quiet --post-hook "systemctl reload nginx" >> "$LOG" 2>&1
+
+if [ $? -eq 0 ]; then
+    echo "[$(date)] Renewal check complete." >> "$LOG"
+else
+    echo "[$(date)] Renewal failed! Check /var/log/letsencrypt/letsencrypt.log" >> "$LOG"
+fi
+```
+
+## 4.2 Auto Renewal
+Already planted inside `gateway.yml`
+<img width="436" height="160" alt="image" src="https://github.com/user-attachments/assets/53554aef-c581-48b3-bad5-45d5c1c46d81" />
+
+## 4.3 
