@@ -297,8 +297,8 @@ receivers:
 <img width="626" height="416" alt="image" src="https://github.com/user-attachments/assets/88425f11-7fd4-46a8-abb1-b8deffdcfbd5" />
 <br>
 
-- Then, to get your Chat ID, go to https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates and search for numbers after "update_id":
-<img width="673" height="276" alt="image" src="https://github.com/user-attachments/assets/d675b454-8370-484a-ac9f-915ba46f4a2a" />
+- Then, to get your Chat ID, go to https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates and search for numbers after `"from"{"id":}`
+<img width="744" height="76" alt="image" src="https://github.com/user-attachments/assets/9df3d8cd-47b1-490c-9a9d-d492a47196ac" />
 
 
 ## 4. Setup Vault (For Grafana Password and Telegram Token)
