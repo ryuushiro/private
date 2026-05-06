@@ -10,7 +10,15 @@ Create a playbook to install monitoring softwares in servers:
 | cAdvisor | 8080 | Appserver 1 |
 
 ```yml
- -----------------------------------------------------------------------------
+---
+# =============================================================================
+# monitoring.yml — Task 7: Monitoring Stack
+# =============================================================================
+# One playbook to rule them all. No manual server access required.
+# Run: ansible-playbook -i inventory.ini monitoring.yml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
 # PLAY 1: Node Exporter on every server (all hosts)
 # -----------------------------------------------------------------------------
 - name: Monitoring — Node Exporter on all servers
@@ -33,9 +41,9 @@ Create a playbook to install monitoring softwares in servers:
         network_mode: host
         pid_mode: host
         command:
-          - '--path.rootfs=/host'
+          - "--path.rootfs=/host"
         volumes:
-          - '/:/host:ro,rslave'
+          - "/:/host:ro,rslave"
 
 # -----------------------------------------------------------------------------
 # PLAY 2: Prometheus, Grafana, cAdvisor, Alertmanager on monitoring server
@@ -45,11 +53,19 @@ Create a playbook to install monitoring softwares in servers:
   become: yes
   tasks:
     # --- UFW ---
-    - name: Allow Prometheus port 9090
+    - name: Remove old open Prometheus port 9090 rule
       ufw:
         rule: allow
         port: "9090"
         proto: tcp
+        delete: yes
+
+    - name: Allow Prometheus port 9090 (Gateway only — Nginx auth)
+      ufw:
+        rule: allow
+        port: "9090"
+        proto: tcp
+        from_ip: 16.79.152.201
 
     - name: Allow Grafana port 3000
       ufw:
@@ -61,6 +77,12 @@ Create a playbook to install monitoring softwares in servers:
       ufw:
         rule: allow
         port: "9093"
+        proto: tcp
+
+    - name: Allow cAdvisor port 8080
+      ufw:
+        rule: allow
+        port: "8080"
         proto: tcp
 
     # --- cAdvisor ---
@@ -105,14 +127,14 @@ Create a playbook to install monitoring softwares in servers:
         image: prom/prometheus:latest
         state: started
         restart_policy: always
-        published_ports:
-          - "9090:9090"
+        network_mode: host
         volumes:
           - /home/finaltask-rizal/prometheus:/etc/prometheus
         command:
-          - '--config.file=/etc/prometheus/prometheus.yml'
-          - '--storage.tsdb.retention.time=15d'
-          - '--storage.tsdb.retention.size=500MB'
+          - "--config.file=/etc/prometheus/prometheus.yml"
+          - "--storage.tsdb.retention.time=15d"
+          - "--storage.tsdb.retention.size=500MB"
+          - "--web.listen-address=0.0.0.0:9090"
 
     # --- Alertmanager ---
     - name: Deploy alertmanager.yml
@@ -133,18 +155,25 @@ Create a playbook to install monitoring softwares in servers:
           - /home/finaltask-rizal/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
 
     # --- Grafana ---
+    - name: Create Grafana data directory
+      file:
+        path: /home/finaltask-rizal/grafana
+        state: directory
+        owner: "472"        # Grafana container runs as UID 472
+        mode: "0755"
+
     - name: Run Grafana container
       community.docker.docker_container:
         name: grafana
         image: grafana/grafana:latest
         state: started
         restart_policy: always
-        published_ports:
-          - "3000:3000"
+        network_mode: host
+        volumes:
+          - /home/finaltask-rizal/grafana:/var/lib/grafana
         env:
           GF_SECURITY_ADMIN_USER: admin
           GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
-
 ```
 
 
@@ -370,5 +399,117 @@ Run `ansible-playbook -i inventory.ini monitoring.yml`.
 - Here are the full dashboard according to the task
   <img width="1699" height="851" alt="image" src="https://github.com/user-attachments/assets/4e8c8d63-40af-4abb-83fd-9894a33da109" />
 
- ### 6.2 Telegram Alerts
- Before, the telegram bot's API was already taken care of.
+### 6.3 Telegram Alerts
+Before, the telegram bot's API was already taken care of.
+
+So, how it actually works?
+
+The chain: Prometheus → alerts.yml → Alertmanager → alertmanager.yml → Telegram
+
+  1. Prometheus scrapes metrics from all node_exporters every 15s (CPU, memory, disk, network).
+
+  2. alerts.yml.j2 — Alert Rules (loaded by Prometheus)
+
+  This file defines when to fire an alert. Four rules:
+  - HighCPUUsage — avg CPU idle < 20% (i.e. usage > 80%) for 5 min → severity: warning
+  - HighMemoryUsage — available memory < 15% for 5 min → severity: warning
+  - LowDiskSpace — free disk < 15% for 5 min → severity: critical
+  - HighNetworkReceive — receive rate > 100 Mbps for 5 min → severity: warning
+
+  3. Alertmanager receives the alert from Prometheus when a rule fires.
+
+  4. alertmanager.yml.j2 — Alert Routing (Alertmanager's config)
+
+  This defines what to do with incoming alerts:
+  - Groups alerts by alertname and instance (avoids flooding you with 4 separate messages for the same incident)
+  - Waits 10s to collect grouped alerts, then sends
+  - Repeats every 4 hours if the issue persists
+  - Routes all alerts to the telegram receiver
+
+**Manually test the alert:**
+```bash
+curl -s -X POST http://108.137.128.226:9093/api/v2/alerts \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "labels": {
+      "alertname": "PipelineVerified",
+      "instance": "Task7",
+      "severity": "critical"
+    },
+    "annotations": {
+      "summary": "Task 7 Monitoring Pipeline is fully operational! Alertmanager -> Telegram verified."
+    },
+    "startsAt": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+  }]' -w "\nHTTP %{http_code}\n"
+```
+
+<img width="624" height="778" alt="image" src="https://github.com/user-attachments/assets/b418a8a7-a7e5-49b9-bd6e-30c135466d9d" />
+
+
+## 7. Prometheus Gateway Challenge 
+
+Add these to `gateway.yml`
+
+```yaml
+    # =========================================================================
+    # SECTION 6 — Prometheus Basic Auth (Task 7 Challenge)
+    # =========================================================================
+
+    - name: Install apache2-utils for htpasswd
+      apt:
+        name: apache2-utils
+        state: present
+
+    - name: Create htpasswd for Prometheus Basic Auth
+      shell:
+        cmd: htpasswd -bc /etc/nginx/.htpasswd admin "{{ prometheus_auth_password }}"
+        creates: /etc/nginx/.htpasswd
+
+    - name: Deploy Prometheus Nginx config
+      template:
+        src: templates/prometheus-nginx.conf.j2
+        dest: /etc/nginx/sites-available/prometheus
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload Nginx
+
+    - name: Enable Prometheus site
+      file:
+        src: /etc/nginx/sites-available/prometheus
+        dest: /etc/nginx/sites-enabled/prometheus
+        state: link
+      notify: Reload Nginx
+
+    - name: Test Nginx configuration
+      command: nginx -t
+      changed_when: false
+```
+
+Then create `prometheus-nginx.conf.j2
+
+```python
+server {
+    listen 80;
+    server_name prom.rizaladlan.studentdumbways.my.id;
+
+    auth_basic "Prometheus";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location / {
+        proxy_pass http://108.137.128.226:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Add the password for login in the Vault.
+
+```python
+vault_prometheus_auth_password: dumbways
+```
+
+<img width="975" height="201" alt="image" src="https://github.com/user-attachments/assets/d3670ef7-9d45-49e9-aa95-8390f5cd744d" />
